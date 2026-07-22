@@ -1,0 +1,15 @@
+{
+  "name": "openascii",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "corepack pnpm --filter @openascii/app dev",
+    "build": "corepack pnpm --filter @openascii/app build",
+    "test": "node --test packages/core/test/*.test.js packages/app/test/*.test.js",
+    "benchmark:export": "node scripts/generate-benchmark-export.mjs"
+  },
+  "packageManager": "pnpm@10.13.1",
+  "pnpm": { "onlyBuiltDependencies": ["esbuild"] },
+  "engines": { "node": ">=18" }
+}
