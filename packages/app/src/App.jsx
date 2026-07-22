@@ -4,7 +4,7 @@ import { AsciiCanvas } from '@openascii/react';
 import { useEditor } from './store.js';
 import { PRESETS, STYLES } from './presets.js';
 import { exportHtml, exportPng, exportReact } from './exporters.js';
-import profilePicUrl from '../../../Profile_Pic.jpeg?url';
+
 
 const Arrow = ({dir}) => {
   const Icon={up:ArrowUp,down:ArrowDown,left:ArrowLeft,right:ArrowRight,ul:ArrowUp,ur:ArrowUp,dl:ArrowDown,dr:ArrowDown}[dir];
@@ -107,7 +107,7 @@ function PresetModal({onClose}) { const apply=useEditor(s=>s.applyPreset);return
 
 function App() {
   const {config,image,filename,fps,cells,setStats,setSource,setConfig}=useEditor();const [exportOpen,setExportOpen]=useState(false),[presetsOpen,setPresetsOpen]=useState(false),[about,setAbout]=useState(false);
-  useEffect(()=>{const img=new Image();img.onload=()=>setSource(img,'Profile_Pic.jpeg',profilePicUrl);img.onerror=()=>{const demo=makeDemo();demo.img.onload=()=>setSource(demo.img,'openascii_demo.png',demo.url);};img.src=profilePicUrl;},[]);
+  useEffect(()=>{const demo=makeDemo();demo.img.onload=()=>setSource(demo.img,'openascii_demo.png',demo.url);},[]);
   const ratio=useMemo(()=>({original:'auto','16:9':'16 / 9','4:3':'4 / 3','1:1':'1 / 1','3:4':'3 / 4','9:16':'9 / 16'}[config.aspectRatio]),[config.aspectRatio]);
   const ratioNumber=useMemo(()=>({original:0,'16:9':16/9,'4:3':4/3,'1:1':1,'3:4':3/4,'9:16':9/16}[config.aspectRatio]),[config.aspectRatio]);
   const benchmark=useMemo(()=>new URLSearchParams(location.search).has('benchmark'),[]);
