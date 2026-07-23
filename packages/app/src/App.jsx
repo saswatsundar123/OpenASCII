@@ -2,8 +2,25 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Upload, Download, Shuffle, X, Image as ImageIcon, ChevronDown, Check, Sparkles, Gauge, Github, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 import { AsciiCanvas } from '@openascii/react';
 import { useEditor } from './store.js';
-import { PRESETS, STYLES } from './presets.js';
+import { PRESETS, STYLES, createProceduralPreset } from './presets.js';
 import { exportHtml, exportPng, exportReact } from './exporters.js';
+import { resolveOutputRatio } from './aspect-ratio.js';
+import { buildEditorMetadata } from './editor-metadata.js';
+import { createGenerationContext } from './preset-generator.js';
+
+
+const COLOR_OPTIONS = [
+  {id:'grayscale',label:'GRAY',foreground:'#f5f5f1',background:'#060708',accent:'#ffffff'},
+  {id:'full-color',label:'SAMPLED',foreground:'#f7f0dc',background:'#030504',accent:'#77e8ff'},
+  {id:'matrix-green',label:'MATRIX',foreground:'#36e66a',background:'#020a04',accent:'#d8ff57'},
+  {id:'amber-monitor',label:'AMBER',foreground:'#ff8a19',background:'#080400',accent:'#ffe4a6'},
+  {id:'cyanotype',label:'CYAN',foreground:'#4fe4ff',background:'#02070c',accent:'#f2fcff'},
+  {id:'phosphor',label:'PHOSPHOR',foreground:'#c7cf7a',background:'#080a05',accent:'#f3ffd0'},
+  {id:'ice-white',label:'ICE',foreground:'#f7fbff',background:'#02060c',accent:'#a8d7ff'},
+  {id:'palette-gradient',label:'PALETTE',foreground:'#ff7c21',background:'#090300',accent:'#ffd35a'},
+  {id:'custom',label:'CUSTOM',foreground:'#ff4fd8',background:'#07020d',accent:'#62f4ff'}
+];
+const colorPatch = mode => { const option=COLOR_OPTIONS.find(item=>item.id===mode)||COLOR_OPTIONS[0];return {colorMode:option.id,foreground:option.foreground,background:option.background,accent:option.accent}; };
 
 
 const Arrow = ({dir}) => {
@@ -35,7 +52,7 @@ function loadImageFile(file) {
 }
 
 function Sidebar({onExport,onPresets}) {
-  const {config,setConfig}=useEditor(); const update=(key)=>(value)=>setConfig({[key]:value});
+  const {config,setConfig,randomizeStyle}=useEditor(); const update=(key)=>(value)=>setConfig({[key]:value}),metadata=buildEditorMetadata(config);
   return <aside className="sidebar">
     <div className="sidebar-brand"><div className="wordmark"><span>OPEN</span><strong>ASCII</strong></div><p>ASCII EDITOR FOR ART, MOTION, INTERACTION, AND WEB EXPORTS</p><div className="brand-links"><a href="https://github.com/saswatsundar123/openascii" target="_blank" rel="noreferrer">SOURCE</a><button onClick={onPresets}>PRESETS</button><button onClick={onExport}>EXPORT</button></div></div>
     <div className="sidebar-head"><div><small>PROJECT / 001</small><strong>COMPOSITION</strong></div><span className="live-dot">LIVE</span></div>
@@ -46,6 +63,15 @@ function Sidebar({onExport,onPresets}) {
       <Section title="LAYER 01" tag="ACTIVE">
         <div className="style-grid">{STYLES.map(([id,label])=><Button key={id} active={config.artStyle===id} onClick={()=>setConfig({artStyle:id})}><span className={`glyph glyph-${id}`}>{label.slice(0,2)}</span>{label}</Button>)}</div>
         <Button className="add-layer" disabled>＋ ADD LAYER <span>V2</span></Button>
+      </Section>
+      <Section title="COMPOSITION MIX" tag={config.secondaryStyle==='none'?'SINGLE':'HYBRID'} open={false}>
+        <Select label="TONE PROFILE" value={config.toneProfile} onChange={update('toneProfile')} options={[['source','SOURCE'],['inverse','INVERSE'],['edge','EDGE LED'],['duotone','DUOTONE']]}/>
+        <Select label="DENSITY PROFILE" value={config.densityProfile} onChange={update('densityProfile')} options={[['continuous','CONTINUOUS'],['threshold','THRESHOLD'],['bands','TONAL BANDS'],['structure','STRUCTURE']]}/>
+        <Slider label="DENSITY THRESHOLD" value={config.densityThreshold} min={0} max={1} step={.02} onChange={update('densityThreshold')}/>
+        <Slider label="STRUCTURE MIX" value={config.structureMix} min={0} max={1} step={.02} onChange={update('structureMix')}/>
+        <Select label="SECONDARY STYLE" value={config.secondaryStyle} onChange={update('secondaryStyle')} options={[['none','NONE'],...STYLES]}/>
+        <Slider label="SECONDARY MIX" value={config.secondaryMix} min={0} max={1} step={.02} onChange={update('secondaryMix')}/>
+        <Select label="SECONDARY REGION" value={config.secondaryRegion} onChange={update('secondaryRegion')} options={[['detail','DETAIL'],['edge','EDGES'],['highlight','HIGHLIGHTS'],['shadow','SHADOWS']]}/>
       </Section>
       <Section title="CHARACTER SYSTEM">
         <Select label="FONT" value={config.font} onChange={update('font')} options={['Space Mono','Courier New','monospace','Inter','Arial']}/>
@@ -62,22 +88,38 @@ function Sidebar({onExport,onPresets}) {
         <Slider label="INVERSE DITHER" value={config.inverseDither} onChange={update('inverseDither')}/>
         <Slider label="FONT SIZE" value={config.fontSize} min={4} max={32} step={1} suffix=" PX" onChange={update('fontSize')}/>
         <Slider label="CHARACTER SPACING" value={config.characterSpacing} min={.8} max={2} step={.05} suffix="×" onChange={update('characterSpacing')}/>
+        <Slider label="RENDER DENSITY" value={config.densityScale} min={.55} max={1.5} step={.05} suffix="×" onChange={update('densityScale')}/>
+        <Select label="PRIMITIVE" value={config.primitiveShape} onChange={update('primitiveShape')} options={[['circle','CIRCLE'],['square','SQUARE'],['ring','RING'],['slash','SLASH'],['diamond','DIAMOND']]}/>
+        <Slider label="PRIMITIVE WEIGHT" value={config.primitiveThickness} min={.4} max={2} step={.05} onChange={update('primitiveThickness')}/>
+        {config.artStyle==='particles'&&<><Slider label="PARTICLE VARIATION" value={config.particleVariation} min={0} max={1} step={.05} onChange={update('particleVariation')}/><Slider label="PARTICLE JITTER" value={config.particleJitter} min={0} max={.5} step={.01} onChange={update('particleJitter')}/><Slider label="PARTICLE DEPTH" value={config.particleDepth} min={0} max={1} step={.05} onChange={update('particleDepth')}/></>}
+        {config.artStyle==='line'&&<><Select label="LINE SYSTEM" value={config.lineSystem} onChange={update('lineSystem')} options={[['scan','SCAN FIELD'],['flow','FLOW FIELD'],['contour','CONTOUR']]}/><Slider label="LINE DIRECTION" value={config.lineDirection} min={-90} max={90} step={1} suffix="°" onChange={update('lineDirection')}/><Slider label="CONTOUR FOLLOW" value={config.lineContour} min={0} max={1} step={.05} onChange={update('lineContour')}/><Slider label="STROKE LENGTH" value={config.lineLength} min={.35} max={1.65} step={.05} suffix="×" onChange={update('lineLength')}/><Slider label="LINE VARIATION" value={config.lineVariation} min={0} max={1} step={.05} onChange={update('lineVariation')}/><Slider label="CROSS DETAIL" value={config.lineSecondary} min={0} max={1} step={.05} onChange={update('lineSecondary')}/></>}
         <Slider label="OPACITY" value={config.opacity} onChange={update('opacity')}/>
       </Section>
       <Section title="GLOBAL FX">
         <Slider label="VIGNETTE" value={config.vignette} onChange={update('vignette')}/>
         <Slider label="BORDER GLOW" value={config.borderGlow} onChange={update('borderGlow')}/>
-        <div className="label">COLOR MODE</div><div className="button-row wrap">{[['grayscale','GRAY'],['full-color','FULL'],['matrix-green','MATRIX'],['amber-monitor','AMBER'],['custom','CUSTOM']].map(([id,label])=><Button key={id} active={config.colorMode===id} onClick={()=>setConfig({colorMode:id})}>{label}</Button>)}</div>
-        {config.colorMode==='custom'&&<div className="color-row"><label>INK<input type="color" value={config.foreground} onChange={e=>setConfig({foreground:e.target.value})}/></label><label>GROUND<input type="color" value={config.background} onChange={e=>setConfig({background:e.target.value})}/></label></div>}
+        <Slider label="GLOW ACCUMULATION" value={config.glowStrength} min={0} max={1} step={.05} onChange={update('glowStrength')}/>
+        <Select label="BACKGROUND" value={config.backgroundStyle} onChange={update('backgroundStyle')} options={[['solid','SOLID'],['gradient','GRADIENT'],['grid','GRID']]}/>
+        <div className="label">COLOR MODE</div><div className="button-row wrap color-modes">{COLOR_OPTIONS.map(option=><Button key={option.id} active={config.colorMode===option.id} onClick={()=>setConfig(option.id==='custom'&&config.colorMode==='custom'?{colorMode:'custom'}:colorPatch(option.id))}><i className="color-swatch" style={{'--swatch-bg':option.background,'--swatch-fg':option.foreground,'--swatch-accent':option.accent}}/>{option.label}</Button>)}</div>
+        <div className="color-row color-row-three"><label>INK<input aria-label="Ink color" type="color" value={config.foreground} onChange={e=>setConfig({foreground:e.target.value})}/></label><label>GROUND<input aria-label="Ground color" type="color" value={config.background} onChange={e=>setConfig({background:e.target.value})}/></label><label>ACCENT<input aria-label="Accent color" type="color" value={config.accent} onChange={e=>setConfig({accent:e.target.value})}/></label></div>
+        <Slider label={config.colorMode==='full-color'?'SOURCE COLOR':'TONAL RANGE'} value={config.colorMix} min={0} max={1} step={.05} onChange={update('colorMix')}/>
+        <Slider label="SATURATION" value={config.colorSaturation} min={0} max={2} step={.05} onChange={update('colorSaturation')}/>
+        <Slider label="PALETTE BIAS" value={config.paletteBias} min={-1} max={1} step={.05} onChange={update('paletteBias')}/>
+        <Slider label="HIGHLIGHT COLOR" value={config.highlightBoost} min={0} max={1} step={.05} onChange={update('highlightBoost')}/>
         <Toggle label="INVERT COLOR" checked={config.invertColor} onChange={update('invertColor')}/>
       </Section>
       <Section title="MOTION FX" tag={config.fxPreset.toUpperCase()}>
-        <div className="preset-tabs">{[['none','NONE'],['noise-field','NOISE FIELD'],['intervals','INTERVALS'],['beam-sweep','BEAM SWEEP'],['glitch','GLITCH']].map(([id,label])=><Button key={id} active={config.fxPreset===id} onClick={()=>setConfig({fxPreset:id})}>{label}</Button>)}</div>
+        <div className="preset-tabs">{[['none','NONE'],['noise-field','NOISE FIELD'],['intervals','INTERVALS'],['beam-sweep','BEAM SWEEP'],['glitch','GLITCH'],['crt','CRT']].map(([id,label])=><Button key={id} active={config.fxPreset===id} onClick={()=>setConfig({fxPreset:id})}>{label}</Button>)}</div>
         <Slider label="FX STRENGTH" value={config.fxStrength} onChange={update('fxStrength')}/>
         <div className="field"><span>DIRECTION</span><div className="direction-grid">{['ul','up','ur','left','right','dl','down','dr'].map(dir=><Button key={dir} aria-label={dir} active={config.direction===dir} onClick={()=>setConfig({direction:dir})}><Arrow dir={dir}/></Button>)}</div></div>
         <Slider label="NOISE SCALE" value={config.noiseScale} min={1} max={200} step={1} onChange={update('noiseScale')}/>
         <Slider label="NOISE SPEED" value={config.noiseSpeed} min={0} max={2} step={.05} onChange={update('noiseSpeed')}/>
+        <Slider label="ANIMATED NOISE" value={config.noiseOpacity} min={0} max={.18} step={.01} onChange={update('noiseOpacity')}/>
         <Slider label="FRAME PERSISTENCE" value={config.temporalPersistence} min={0} max={.94} step={.01} onChange={update('temporalPersistence')}/>
+        <Slider label="PHOSPHOR DECAY" value={config.phosphorDecay} min={0} max={.94} step={.01} onChange={update('phosphorDecay')}/>
+        <Slider label="GHOST STRENGTH" value={config.ghostStrength} min={0} max={.28} step={.01} onChange={update('ghostStrength')}/>
+        <Slider label="GHOST FRAMES" value={config.ghostFrames} min={0} max={3} step={1} onChange={update('ghostFrames')}/>
+        <Slider label="GHOST SPACING" value={config.ghostSpacing} min={1} max={8} step={1} onChange={update('ghostSpacing')}/>
       </Section>
       <Section title="MOUSE INTERACTION" tag="PRIORITY">
         <div className="segmented interaction-modes"><Button active={config.mouseMode==='attract'} onClick={()=>setConfig({mouseMode:'attract'})}>ATTRACT</Button><Button active={config.mouseMode==='push'} onClick={()=>setConfig({mouseMode:'push'})}>PUSH</Button><Button active={config.mouseMode==='swirl'} onClick={()=>setConfig({mouseMode:'swirl'})}>SWIRL</Button><Button active={config.mouseMode==='ripple'} onClick={()=>setConfig({mouseMode:'ripple'})}>RIPPLE</Button></div>
@@ -86,13 +128,17 @@ function Sidebar({onExport,onPresets}) {
         <Slider label="SPREAD" value={config.spread} min={.25} max={4} step={.05} suffix="×" onChange={update('spread')}/>
         <Slider label="SPRING" value={config.springStrength} min={4} max={80} step={1} onChange={update('springStrength')}/>
         <Slider label="DAMPING" value={config.damping} min={1} max={20} step={.5} onChange={update('damping')}/>
+        <Slider label="CLICK SENSITIVITY" value={config.clickSensitivity} min={0} max={3} step={.05} onChange={update('clickSensitivity')}/>
+        <Slider label="CLICK RETURN" value={config.clickReturn} min={.08} max={1} step={.02} onChange={update('clickReturn')}/>
+        <Slider label="CLICK DAMPING" value={config.clickDamping} min={.15} max={1} step={.02} onChange={update('clickDamping')}/>
+        <p className="hint interaction-hint">PRESS THE CANVAS TO REPEL THE ENTIRE FIELD. RELEASE TO LET THE SPRINGS SETTLE.</p>
       </Section>
       <Section title="OUTPUT QUALITY">
         <div className="quality-grid">{[160,240,320,480,640].map(q=><Button key={q} active={config.quality===q} onClick={()=>setConfig({quality:q})}>{q}</Button>)}</div>
         <p className="hint">Higher resolution increases character density and render cost.</p>
       </Section>
     </div>
-    <div className="sidebar-actions"><div className="sidebar-meta"><span>FMT <b>CANVAS 2D</b></span><span>STYLE <b>{config.artStyle.toUpperCase()}</b></span><span>FX <b>{config.fxPreset.toUpperCase()}</b></span><span>RES <b>{config.quality}</b></span></div><div className="action-orbs"><Button onClick={onPresets}><Sparkles size={14}/> PRESETS</Button><Button onClick={()=>{const p=PRESETS[Math.floor(Math.random()*PRESETS.length)];useEditor.getState().applyPreset(p);}}><Shuffle size={14}/> RANDOM</Button><Button className="export-button" onClick={onExport}><Download size={14}/> EXPORT</Button></div></div>
+    <div className="sidebar-actions"><div className="sidebar-meta">{metadata.map(([label,value])=><span key={label}>{label} <b>{value}</b></span>)}</div><div className="action-orbs"><Button onClick={onPresets}><Sparkles size={14}/> PRESETS</Button><Button onClick={()=>randomizeStyle(Date.now())}><Shuffle size={14}/> RANDOM</Button><Button className="export-button" onClick={onExport}><Download size={14}/> EXPORT</Button></div></div>
   </aside>;
 }
 
@@ -107,18 +153,18 @@ function PresetModal({onClose}) { const apply=useEditor(s=>s.applyPreset);return
 
 function App() {
   const {config,image,filename,fps,cells,setStats,setSource,setConfig}=useEditor();const [exportOpen,setExportOpen]=useState(false),[presetsOpen,setPresetsOpen]=useState(false),[about,setAbout]=useState(false);
-  useEffect(()=>{const demo=makeDemo();demo.img.onload=()=>setSource(demo.img,'openascii_demo.png',demo.url);},[]);
-  const ratio=useMemo(()=>({original:'auto','16:9':'16 / 9','4:3':'4 / 3','1:1':'1 / 1','3:4':'3 / 4','9:16':'9 / 16'}[config.aspectRatio]),[config.aspectRatio]);
-  const ratioNumber=useMemo(()=>({original:0,'16:9':16/9,'4:3':4/3,'1:1':1,'3:4':3/4,'9:16':9/16}[config.aspectRatio]),[config.aspectRatio]);
+  useEffect(()=>{const demo=makeDemo();demo.img.onload=()=>setSource(demo.img,'openascii_demo.png',demo.url);},[setSource]);
+  const ratioNumber=useMemo(()=>resolveOutputRatio(config.aspectRatio,image),[config.aspectRatio,image]);
   const benchmark=useMemo(()=>new URLSearchParams(location.search).has('benchmark'),[]);
   const cleanBenchmark=useMemo(()=>new URLSearchParams(location.search).has('clean'),[]);
-  useEffect(()=>{const style=new URLSearchParams(location.search).get('style');if(style)setConfig({artStyle:style});},[setConfig]);
-  if(benchmark)return <main className="benchmark-shell"><AsciiCanvas id="ascii-canvas" image={image} config={config} onStats={setStats}/>{!cleanBenchmark&&<output>{fps} FPS · {cells.toLocaleString()} CELLS</output>}</main>;
+  const captureBenchmark=useMemo(()=>new URLSearchParams(location.search).has('capture'),[]);
+  useEffect(()=>{const params=new URLSearchParams(location.search),style=params.get('style'),preset=params.get('preset'),system=params.get('system'),color=params.get('color'),line=params.get('line'),direction=params.get('lineDirection'),weight=params.get('lineWeight'),length=params.get('lineLength'),history=params.getAll('history');if(preset!==null){const current=useEditor.getState().config,context=createGenerationContext(current,history);useEditor.getState().applyPreset(createProceduralPreset(Number(preset),context));}if(system!==null&&PRESETS[Number(system)])useEditor.getState().applyPreset(PRESETS[Number(system)]);if(style)setConfig({artStyle:style});if(color)setConfig(colorPatch(color));if(line)setConfig({artStyle:'line',lineSystem:line});if(direction!==null)setConfig({lineDirection:Number(direction)});if(weight!==null)setConfig({primitiveThickness:Number(weight)});if(length!==null)setConfig({lineLength:Number(length)});},[setConfig]);
+  if(benchmark)return <main className="benchmark-shell"><AsciiCanvas id="ascii-canvas" image={image} config={config} onStats={setStats} staticFrame={captureBenchmark} exposeEngine/>{!cleanBenchmark&&<output>{fps} FPS · {cells.toLocaleString()} CELLS</output>}</main>;
   return <div className="app-shell">
     <header className="topbar"><nav><button className="selected">LIBRARY</button><button onClick={()=>setPresetsOpen(true)}>TEMPLATES</button><button onClick={()=>setPresetsOpen(true)}>CREATIONS</button><button className="theme-button" onClick={()=>setAbout(true)} aria-label="About OpenASCII">◐</button></nav><div className="top-actions"><a className="github" href="https://github.com/saswatsundar123/openascii" target="_blank" rel="noreferrer"><Github size={15}/> SOURCE</a><Button className="publish" onClick={()=>setExportOpen(true)}>PUBLISH</Button></div></header>
     <main className="workspace">
       <section className="canvas-stage" onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();loadImageFile(e.dataTransfer.files[0]);}}>
-        <div className={`canvas-grid ${ratioNumber?'fixed-ratio':''}`} style={{aspectRatio:ratio,'--target-ratio':ratioNumber||1}}><AsciiCanvas id="ascii-canvas" image={image} config={config} onStats={setStats}/><div className="corner c1"/><div className="corner c2"/><div className="corner c3"/><div className="corner c4"/><div className="canvas-label"><span>LIVE OUTPUT</span><b>{String(config.quality).padStart(3,'0')}</b></div></div>
+        <div className="canvas-grid fixed-ratio" style={{'--target-ratio':ratioNumber}}><AsciiCanvas id="ascii-canvas" image={image} config={config} onStats={setStats}/><div className="corner c1"/><div className="corner c2"/><div className="corner c3"/><div className="corner c4"/><div className="canvas-label"><span>LIVE OUTPUT</span><b>{String(config.quality).padStart(3,'0')}</b></div></div>
         <div className="canvas-bottom"><div className="render-status"><i/><div><span>RENDER / ACTIVE</span><strong>{filename}</strong></div></div><div className="metrics"><span><b>{fps}</b> FPS</span><span><b>{cells.toLocaleString()}</b> CELLS</span><Button onClick={()=>setConfig({quality:Math.max(160,Math.round(config.quality/2))})}><Gauge size={13}/> REDUCE CHARACTERS</Button></div><div className="ratio-picker">{['ORIGINAL','16:9','4:3','1:1','3:4','9:16'].map(r=><button className={config.aspectRatio===r.toLowerCase()?'active':''} onClick={()=>setConfig({aspectRatio:r.toLowerCase()})} key={r}>{r}</button>)}</div></div>
       </section>
       <Sidebar onExport={()=>setExportOpen(true)} onPresets={()=>setPresetsOpen(true)}/>

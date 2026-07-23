@@ -1,0 +1,402 @@
+﻿[
+    {
+        "seed":  1,
+        "archetype":  "directional-engraving",
+        "renderer":  "line",
+        "secondaryRenderer":  "none",
+        "toneProfile":  "duotone",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "amber",
+        "effect":  "none"
+    },
+    {
+        "seed":  2,
+        "archetype":  "phosphor-terminal",
+        "renderer":  "terminal",
+        "secondaryRenderer":  "none",
+        "toneProfile":  "source",
+        "densityProfile":  "continuous",
+        "paletteFamily":  "phosphor",
+        "effect":  "intervals"
+    },
+    {
+        "seed":  3,
+        "archetype":  "matrix-glyph-portrait",
+        "renderer":  "classic-ascii",
+        "secondaryRenderer":  "particles",
+        "toneProfile":  "source",
+        "densityProfile":  "bands",
+        "paletteFamily":  "matrix",
+        "effect":  "none"
+    },
+    {
+        "seed":  4,
+        "archetype":  "electric-particle-field",
+        "renderer":  "particles",
+        "secondaryRenderer":  "dot-cross",
+        "toneProfile":  "edge",
+        "densityProfile":  "structure",
+        "paletteFamily":  "cyanotype",
+        "effect":  "beam-sweep"
+    },
+    {
+        "seed":  5,
+        "archetype":  "negative-particle-relief",
+        "renderer":  "halftone",
+        "secondaryRenderer":  "dot-cross",
+        "toneProfile":  "source",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "phosphor",
+        "effect":  "intervals"
+    },
+    {
+        "seed":  6,
+        "archetype":  "amber-mosaic",
+        "renderer":  "retro-art",
+        "secondaryRenderer":  "dot-cross",
+        "toneProfile":  "source",
+        "densityProfile":  "bands",
+        "paletteFamily":  "amber",
+        "effect":  "noise-field"
+    },
+    {
+        "seed":  7,
+        "archetype":  "dot-cross-portrait",
+        "renderer":  "dot-cross",
+        "secondaryRenderer":  "braille",
+        "toneProfile":  "inverse",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "ice",
+        "effect":  "none"
+    },
+    {
+        "seed":  8,
+        "archetype":  "hybrid-edge-mosaic",
+        "renderer":  "claude-code",
+        "secondaryRenderer":  "particles",
+        "toneProfile":  "source",
+        "densityProfile":  "bands",
+        "paletteFamily":  "spectrum",
+        "effect":  "crt"
+    },
+    {
+        "seed":  9,
+        "archetype":  "silver-halftone",
+        "renderer":  "halftone",
+        "secondaryRenderer":  "dot-cross",
+        "toneProfile":  "inverse",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "cyanotype",
+        "effect":  "intervals"
+    },
+    {
+        "seed":  10,
+        "archetype":  "editorial-ascii",
+        "renderer":  "classic-ascii",
+        "secondaryRenderer":  "braille",
+        "toneProfile":  "source",
+        "densityProfile":  "bands",
+        "paletteFamily":  "phosphor",
+        "effect":  "crt"
+    },
+    {
+        "seed":  11,
+        "archetype":  "sparse-signal-field",
+        "renderer":  "line",
+        "secondaryRenderer":  "dot-cross",
+        "toneProfile":  "edge",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "ice",
+        "effect":  "beam-sweep"
+    },
+    {
+        "seed":  12,
+        "archetype":  "sampled-pixel-field",
+        "renderer":  "retro-art",
+        "secondaryRenderer":  "dot-cross",
+        "toneProfile":  "source",
+        "densityProfile":  "continuous",
+        "paletteFamily":  "sampled",
+        "effect":  "beam-sweep"
+    },
+    {
+        "seed":  13,
+        "archetype":  "inverse-braille-field",
+        "renderer":  "braille",
+        "secondaryRenderer":  "particles",
+        "toneProfile":  "inverse",
+        "densityProfile":  "structure",
+        "paletteFamily":  "matrix",
+        "effect":  "intervals"
+    },
+    {
+        "seed":  14,
+        "archetype":  "directional-engraving",
+        "renderer":  "line",
+        "secondaryRenderer":  "none",
+        "toneProfile":  "duotone",
+        "densityProfile":  "bands",
+        "paletteFamily":  "grayscale",
+        "effect":  "intervals"
+    },
+    {
+        "seed":  15,
+        "archetype":  "phosphor-terminal",
+        "renderer":  "terminal",
+        "secondaryRenderer":  "braille",
+        "toneProfile":  "source",
+        "densityProfile":  "continuous",
+        "paletteFamily":  "phosphor",
+        "effect":  "intervals"
+    },
+    {
+        "seed":  16,
+        "archetype":  "electric-particle-field",
+        "renderer":  "particles",
+        "secondaryRenderer":  "line",
+        "toneProfile":  "edge",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "cyanotype",
+        "effect":  "noise-field"
+    },
+    {
+        "seed":  17,
+        "archetype":  "matrix-glyph-portrait",
+        "renderer":  "classic-ascii",
+        "secondaryRenderer":  "particles",
+        "toneProfile":  "source",
+        "densityProfile":  "continuous",
+        "paletteFamily":  "matrix",
+        "effect":  "none"
+    },
+    {
+        "seed":  18,
+        "archetype":  "electric-particle-field",
+        "renderer":  "particles",
+        "secondaryRenderer":  "none",
+        "toneProfile":  "source",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "spectrum",
+        "effect":  "crt"
+    },
+    {
+        "seed":  19,
+        "archetype":  "dot-cross-portrait",
+        "renderer":  "dot-cross",
+        "secondaryRenderer":  "particles",
+        "toneProfile":  "source",
+        "densityProfile":  "structure",
+        "paletteFamily":  "grayscale",
+        "effect":  "beam-sweep"
+    },
+    {
+        "seed":  20,
+        "archetype":  "amber-mosaic",
+        "renderer":  "retro-art",
+        "secondaryRenderer":  "none",
+        "toneProfile":  "source",
+        "densityProfile":  "bands",
+        "paletteFamily":  "spectrum",
+        "effect":  "noise-field"
+    },
+    {
+        "seed":  21,
+        "archetype":  "dot-cross-portrait",
+        "renderer":  "dot-cross",
+        "secondaryRenderer":  "line",
+        "toneProfile":  "inverse",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "grayscale",
+        "effect":  "beam-sweep"
+    },
+    {
+        "seed":  22,
+        "archetype":  "hybrid-edge-mosaic",
+        "renderer":  "retro-art",
+        "secondaryRenderer":  "dot-cross",
+        "toneProfile":  "duotone",
+        "densityProfile":  "structure",
+        "paletteFamily":  "amber",
+        "effect":  "crt"
+    },
+    {
+        "seed":  23,
+        "archetype":  "silver-halftone",
+        "renderer":  "halftone",
+        "secondaryRenderer":  "particles",
+        "toneProfile":  "inverse",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "grayscale",
+        "effect":  "intervals"
+    },
+    {
+        "seed":  24,
+        "archetype":  "editorial-ascii",
+        "renderer":  "classic-ascii",
+        "secondaryRenderer":  "line",
+        "toneProfile":  "duotone",
+        "densityProfile":  "bands",
+        "paletteFamily":  "phosphor",
+        "effect":  "intervals"
+    },
+    {
+        "seed":  25,
+        "archetype":  "sparse-signal-field",
+        "renderer":  "line",
+        "secondaryRenderer":  "braille",
+        "toneProfile":  "edge",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "grayscale",
+        "effect":  "noise-field"
+    },
+    {
+        "seed":  26,
+        "archetype":  "sampled-pixel-field",
+        "renderer":  "retro-art",
+        "secondaryRenderer":  "dot-cross",
+        "toneProfile":  "source",
+        "densityProfile":  "bands",
+        "paletteFamily":  "sampled",
+        "effect":  "beam-sweep"
+    },
+    {
+        "seed":  27,
+        "archetype":  "inverse-braille-field",
+        "renderer":  "braille",
+        "secondaryRenderer":  "dot-cross",
+        "toneProfile":  "inverse",
+        "densityProfile":  "structure",
+        "paletteFamily":  "phosphor",
+        "effect":  "glitch"
+    },
+    {
+        "seed":  28,
+        "archetype":  "directional-engraving",
+        "renderer":  "line",
+        "secondaryRenderer":  "dot-cross",
+        "toneProfile":  "duotone",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "grayscale",
+        "effect":  "none"
+    },
+    {
+        "seed":  29,
+        "archetype":  "phosphor-terminal",
+        "renderer":  "terminal",
+        "secondaryRenderer":  "none",
+        "toneProfile":  "source",
+        "densityProfile":  "continuous",
+        "paletteFamily":  "cyanotype",
+        "effect":  "crt"
+    },
+    {
+        "seed":  30,
+        "archetype":  "matrix-glyph-portrait",
+        "renderer":  "classic-ascii",
+        "secondaryRenderer":  "particles",
+        "toneProfile":  "inverse",
+        "densityProfile":  "bands",
+        "paletteFamily":  "phosphor",
+        "effect":  "beam-sweep"
+    },
+    {
+        "seed":  31,
+        "archetype":  "matrix-glyph-portrait",
+        "renderer":  "terminal",
+        "secondaryRenderer":  "braille",
+        "toneProfile":  "inverse",
+        "densityProfile":  "continuous",
+        "paletteFamily":  "ice",
+        "effect":  "intervals"
+    },
+    {
+        "seed":  32,
+        "archetype":  "electric-particle-field",
+        "renderer":  "particles",
+        "secondaryRenderer":  "none",
+        "toneProfile":  "source",
+        "densityProfile":  "structure",
+        "paletteFamily":  "spectrum",
+        "effect":  "noise-field"
+    },
+    {
+        "seed":  33,
+        "archetype":  "negative-particle-relief",
+        "renderer":  "halftone",
+        "secondaryRenderer":  "braille",
+        "toneProfile":  "source",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "cyanotype",
+        "effect":  "beam-sweep"
+    },
+    {
+        "seed":  34,
+        "archetype":  "amber-mosaic",
+        "renderer":  "claude-code",
+        "secondaryRenderer":  "dot-cross",
+        "toneProfile":  "duotone",
+        "densityProfile":  "structure",
+        "paletteFamily":  "paper",
+        "effect":  "noise-field"
+    },
+    {
+        "seed":  35,
+        "archetype":  "dot-cross-portrait",
+        "renderer":  "dot-cross",
+        "secondaryRenderer":  "none",
+        "toneProfile":  "source",
+        "densityProfile":  "structure",
+        "paletteFamily":  "phosphor",
+        "effect":  "intervals"
+    },
+    {
+        "seed":  36,
+        "archetype":  "hybrid-edge-mosaic",
+        "renderer":  "claude-code",
+        "secondaryRenderer":  "dot-cross",
+        "toneProfile":  "source",
+        "densityProfile":  "bands",
+        "paletteFamily":  "sampled",
+        "effect":  "beam-sweep"
+    },
+    {
+        "seed":  37,
+        "archetype":  "silver-halftone",
+        "renderer":  "halftone",
+        "secondaryRenderer":  "dot-cross",
+        "toneProfile":  "inverse",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "cyanotype",
+        "effect":  "none"
+    },
+    {
+        "seed":  38,
+        "archetype":  "editorial-ascii",
+        "renderer":  "classic-ascii",
+        "secondaryRenderer":  "braille",
+        "toneProfile":  "source",
+        "densityProfile":  "bands",
+        "paletteFamily":  "phosphor",
+        "effect":  "none"
+    },
+    {
+        "seed":  39,
+        "archetype":  "sparse-signal-field",
+        "renderer":  "particles",
+        "secondaryRenderer":  "braille",
+        "toneProfile":  "source",
+        "densityProfile":  "structure",
+        "paletteFamily":  "grayscale",
+        "effect":  "noise-field"
+    },
+    {
+        "seed":  40,
+        "archetype":  "contour-wire",
+        "renderer":  "line",
+        "secondaryRenderer":  "particles",
+        "toneProfile":  "edge",
+        "densityProfile":  "threshold",
+        "paletteFamily":  "phosphor",
+        "effect":  "beam-sweep"
+    }
+]
