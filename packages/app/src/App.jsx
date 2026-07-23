@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Upload, Download, Shuffle, X, Image as ImageIcon, ChevronDown, Check, Sparkles, Gauge, Github, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Upload, Download, Shuffle, X, Image as ImageIcon, ChevronDown, Check, Sparkles, Gauge, Github, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Undo2, Save, Maximize2, Minimize2 } from 'lucide-react';
 import { AsciiCanvas } from '@openascii/react';
-import { useEditor } from './store.js';
+import { useEditor, saveConfig } from './store.js';
 import { PRESETS, STYLES, createProceduralPreset } from './presets.js';
 import { exportHtml, exportPng, exportReact } from './exporters.js';
 import { resolveOutputRatio } from './aspect-ratio.js';
@@ -46,15 +46,17 @@ function makeDemo() {
 
 function loadImageFile(file) {
   if(!file||!file.type.startsWith('image/')) return;
+  useEditor.getState().setLoading(true);
   const reader=new FileReader();
-  reader.onload=()=>{const img=new Image();img.onload=()=>useEditor.getState().setSource(img,file.name,reader.result);img.src=reader.result;};
+  reader.onload=()=>{const img=new Image();img.onload=()=>useEditor.getState().setSource(img,file.name,reader.result);img.onerror=()=>useEditor.getState().setLoading(false);img.src=reader.result;};
+  reader.onerror=()=>useEditor.getState().setLoading(false);
   reader.readAsDataURL(file);
 }
 
 function Sidebar({onExport,onPresets}) {
   const {config,setConfig,randomizeStyle}=useEditor(); const update=(key)=>(value)=>setConfig({[key]:value}),metadata=buildEditorMetadata(config);
   return <aside className="sidebar">
-    <div className="sidebar-brand"><div className="wordmark"><span>OPEN</span><strong>ASCII</strong></div><p>ASCII EDITOR FOR ART, MOTION, INTERACTION, AND WEB EXPORTS</p><div className="brand-links"><a href="https://github.com/saswatsundar123/openascii" target="_blank" rel="noreferrer">SOURCE</a><button onClick={onPresets}>PRESETS</button><button onClick={onExport}>EXPORT</button></div></div>
+    <div className="sidebar-brand"><div className="wordmark"><span>OPEN</span><strong>ASCII</strong></div><p>ASCII EDITOR FOR ART, MOTION, INTERACTION, AND WEB EXPORTS</p><div className="brand-links"><a href="https://github.com/saswatsundar123/openascii" target="_blank" rel="noreferrer"><Github size={12}/> SOURCE</a><button onClick={onPresets}>PRESETS</button><button onClick={onExport}>EXPORT</button></div></div>
     <div className="sidebar-head"><div><small>PROJECT / 001</small><strong>COMPOSITION</strong></div><span className="live-dot">LIVE</span></div>
     <div className="scroll-panel">
       <Section title="SOURCE" tag="IMAGE">
@@ -138,7 +140,7 @@ function Sidebar({onExport,onPresets}) {
         <p className="hint">Higher resolution increases character density and render cost.</p>
       </Section>
     </div>
-    <div className="sidebar-actions"><div className="sidebar-meta">{metadata.map(([label,value])=><span key={label}>{label} <b>{value}</b></span>)}</div><div className="action-orbs"><Button onClick={onPresets}><Sparkles size={14}/> PRESETS</Button><Button onClick={()=>randomizeStyle(Date.now())}><Shuffle size={14}/> RANDOM</Button><Button className="export-button" onClick={onExport}><Download size={14}/> EXPORT</Button></div></div>
+    <div className="sidebar-actions"><div className="sidebar-meta">{metadata.map(([label,value])=><span key={label}>{label} <b>{value}</b></span>)}</div><div className="action-orbs"><Button onClick={onPresets} data-tip="Browse presets"><Sparkles size={14}/> PRESETS</Button><Button onClick={()=>randomizeStyle(Date.now())} data-tip="Randomize style"><Shuffle size={14}/> RANDOM</Button><Button className="export-button" onClick={onExport} data-tip="Export composition"><Download size={14}/> EXPORT</Button></div></div>
   </aside>;
 }
 
@@ -152,8 +154,12 @@ function ExportModal({onClose}) { const {config,sourceUrl}=useEditor();const can
 function PresetModal({onClose}) { const apply=useEditor(s=>s.applyPreset);return <Modal title="SELECT A PRESET" onClose={onClose}><div className="preset-list">{PRESETS.map((p,i)=><button key={p.name} onClick={()=>{apply(p);onClose();}}><span>{String(i+1).padStart(2,'0')}</span><div><strong>{p.name}</strong><small>{p.artStyle.replace('-',' ')} / {p.fxPreset.replace('-',' ')}</small></div><ArrowRight/></button>)}</div></Modal>; }
 
 function App() {
-  const {config,image,filename,fps,cells,setStats,setSource,setConfig}=useEditor();const [exportOpen,setExportOpen]=useState(false),[presetsOpen,setPresetsOpen]=useState(false),[about,setAbout]=useState(false);
+  const {config,image,filename,fps,cells,setStats,setSource,setConfig,undo,past,loading}=useEditor();const [exportOpen,setExportOpen]=useState(false),[presetsOpen,setPresetsOpen]=useState(false),[about,setAbout]=useState(false),[saved,setSaved]=useState(false),[fullscreen,setFullscreen]=useState(false);
   useEffect(()=>{const demo=makeDemo();demo.img.onload=()=>setSource(demo.img,'openascii_demo.png',demo.url);},[setSource]);
+  useEffect(()=>{const fn=e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo();}};window.addEventListener('keydown',fn);return()=>window.removeEventListener('keydown',fn);},[undo]);
+  useEffect(()=>{const onChange=()=>setFullscreen(!!document.fullscreenElement);document.addEventListener('fullscreenchange',onChange);return()=>document.removeEventListener('fullscreenchange',onChange);},[]);
+  function handleSave(){saveConfig(config);setSaved(true);setTimeout(()=>setSaved(false),1600);}
+  function toggleFullscreen(){fullscreen?document.exitFullscreen():document.documentElement.requestFullscreen();}
   const ratioNumber=useMemo(()=>resolveOutputRatio(config.aspectRatio,image),[config.aspectRatio,image]);
   const benchmark=useMemo(()=>new URLSearchParams(location.search).has('benchmark'),[]);
   const cleanBenchmark=useMemo(()=>new URLSearchParams(location.search).has('clean'),[]);
@@ -161,10 +167,10 @@ function App() {
   useEffect(()=>{const params=new URLSearchParams(location.search),style=params.get('style'),preset=params.get('preset'),system=params.get('system'),color=params.get('color'),line=params.get('line'),direction=params.get('lineDirection'),weight=params.get('lineWeight'),length=params.get('lineLength'),history=params.getAll('history');if(preset!==null){const current=useEditor.getState().config,context=createGenerationContext(current,history);useEditor.getState().applyPreset(createProceduralPreset(Number(preset),context));}if(system!==null&&PRESETS[Number(system)])useEditor.getState().applyPreset(PRESETS[Number(system)]);if(style)setConfig({artStyle:style});if(color)setConfig(colorPatch(color));if(line)setConfig({artStyle:'line',lineSystem:line});if(direction!==null)setConfig({lineDirection:Number(direction)});if(weight!==null)setConfig({primitiveThickness:Number(weight)});if(length!==null)setConfig({lineLength:Number(length)});},[setConfig]);
   if(benchmark)return <main className="benchmark-shell"><AsciiCanvas id="ascii-canvas" image={image} config={config} onStats={setStats} staticFrame={captureBenchmark} exposeEngine/>{!cleanBenchmark&&<output>{fps} FPS · {cells.toLocaleString()} CELLS</output>}</main>;
   return <div className="app-shell">
-    <header className="topbar"><nav><button className="selected">LIBRARY</button><button onClick={()=>setPresetsOpen(true)}>TEMPLATES</button><button onClick={()=>setPresetsOpen(true)}>CREATIONS</button><button className="theme-button" onClick={()=>setAbout(true)} aria-label="About OpenASCII">◐</button></nav><div className="top-actions"><a className="github" href="https://github.com/saswatsundar123/openascii" target="_blank" rel="noreferrer"><Github size={15}/> SOURCE</a><Button className="publish" onClick={()=>setExportOpen(true)}>PUBLISH</Button></div></header>
+    <header className="topbar"><nav><button className="theme-button" onClick={()=>setAbout(true)} aria-label="About OpenASCII" data-tip="About OpenASCII">◐</button></nav><div className="top-actions"><Button onClick={undo} disabled={!past.length} data-tip="Undo last change (Ctrl+Z)"><Undo2 size={13}/> UNDO</Button><Button onClick={handleSave} className={saved?'is-active':''} data-tip="Save settings to browser"><Save size={13}/> {saved?'SAVED':'SAVE'}</Button><Button onClick={toggleFullscreen} data-tip={fullscreen?'Exit fullscreen (F)':'Fullscreen (F)'}>{fullscreen?<Minimize2 size={13}/>:<Maximize2 size={13}/>} {fullscreen?'EXIT':'EXPAND'}</Button></div></header>
     <main className="workspace">
       <section className="canvas-stage" onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();loadImageFile(e.dataTransfer.files[0]);}}>
-        <div className="canvas-grid fixed-ratio" style={{'--target-ratio':ratioNumber}}><AsciiCanvas id="ascii-canvas" image={image} config={config} onStats={setStats}/><div className="corner c1"/><div className="corner c2"/><div className="corner c3"/><div className="corner c4"/><div className="canvas-label"><span>LIVE OUTPUT</span><b>{String(config.quality).padStart(3,'0')}</b></div></div>
+        <div className="canvas-grid fixed-ratio" style={{'--target-ratio':ratioNumber}}><AsciiCanvas id="ascii-canvas" image={image} config={config} onStats={setStats}/>{loading&&<div className="canvas-loading" aria-label="Loading image"><div className="canvas-spinner"/><span>PROCESSING</span></div>}<div className="corner c1"/><div className="corner c2"/><div className="corner c3"/><div className="corner c4"/><div className="canvas-label"><span>LIVE OUTPUT</span><b>{String(config.quality).padStart(3,'0')}</b></div></div>
         <div className="canvas-bottom"><div className="render-status"><i/><div><span>RENDER / ACTIVE</span><strong>{filename}</strong></div></div><div className="metrics"><span><b>{fps}</b> FPS</span><span><b>{cells.toLocaleString()}</b> CELLS</span><Button onClick={()=>setConfig({quality:Math.max(160,Math.round(config.quality/2))})}><Gauge size={13}/> REDUCE CHARACTERS</Button></div><div className="ratio-picker">{['ORIGINAL','16:9','4:3','1:1','3:4','9:16'].map(r=><button className={config.aspectRatio===r.toLowerCase()?'active':''} onClick={()=>setConfig({aspectRatio:r.toLowerCase()})} key={r}>{r}</button>)}</div></div>
       </section>
       <Sidebar onExport={()=>setExportOpen(true)} onPresets={()=>setPresetsOpen(true)}/>
