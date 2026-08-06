@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Upload, Download, Shuffle, X, Image as ImageIcon, ChevronDown, Check, Sparkles, Gauge, Github, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Undo2, Save, Maximize2, Minimize2 } from 'lucide-react';
+import { Upload, Download, Shuffle, X, Image as ImageIcon, ChevronDown, Check, Sparkles, Gauge, Github, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Undo2, Save, Maximize2, Minimize2, Play, Pause } from 'lucide-react';
 import { AsciiCanvas } from '@openascii/react';
 import { useEditor, saveConfig } from './store.js';
 import { PRESETS, STYLES, createProceduralPreset } from './presets.js';
@@ -45,12 +45,89 @@ function makeDemo() {
 }
 
 function loadImageFile(file) {
-  if(!file||!file.type.startsWith('image/')) return;
-  useEditor.getState().setLoading(true);
-  const reader=new FileReader();
-  reader.onload=()=>{const img=new Image();img.onload=()=>useEditor.getState().setSource(img,file.name,reader.result);img.onerror=()=>useEditor.getState().setLoading(false);img.src=reader.result;};
-  reader.onerror=()=>useEditor.getState().setLoading(false);
-  reader.readAsDataURL(file);
+  if(!file) return;
+  if(file.type.startsWith('image/') && file.type !== 'image/gif') {
+    useEditor.getState().setLoading(true);
+    const reader=new FileReader();
+    reader.onload=()=>{const img=new Image();img.onload=()=>useEditor.getState().setSource(img,file.name,reader.result);img.onerror=()=>useEditor.getState().setLoading(false);img.src=reader.result;};
+    reader.onerror=()=>useEditor.getState().setLoading(false);
+    reader.readAsDataURL(file);
+  } else if (file.type.startsWith('video/')) {
+    useEditor.getState().setLoading(true);
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.crossOrigin = 'anonymous';
+    video.style.display = 'none';
+    document.body.appendChild(video);
+    video.onloadeddata = () => {
+      video.play().catch(() => {});
+      useEditor.getState().setSource(video, file.name, url);
+    };
+    video.onerror = () => useEditor.getState().setLoading(false);
+    video.src = url;
+    video.load();
+  }
+}
+
+function VideoTimeline({ video }) {
+  const [playing, setPlaying] = useState(!video.paused);
+  const [progress, setProgress] = useState(0);
+  
+  useEffect(() => {
+    let raf;
+    const update = () => {
+      if(video.duration) setProgress(video.currentTime / video.duration);
+      raf = requestAnimationFrame(update);
+    };
+    raf = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(raf);
+  }, [video]);
+
+  useEffect(() => {
+    const handlePlay = () => setPlaying(true);
+    const handlePause = () => setPlaying(false);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+    return () => {
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+    };
+  }, [video]);
+
+  const toggle = () => {
+    if (video.paused) video.play().catch(()=>{});
+    else video.pause();
+  };
+
+  const onSeek = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    video.currentTime = pos * video.duration;
+    const engine = document.getElementById('ascii-canvas')?.__openAsciiEngine;
+    if (engine && video.paused) {
+      engine.buildFrame();
+      engine.draw(performance.now(), 1/60);
+    }
+  };
+
+  return (
+    <div className="video-timeline">
+      <button className="play-button" onClick={toggle}>
+        {playing ? <Pause size={14}/> : <Play size={14}/>}
+      </button>
+      <div className="timeline-track" onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId);
+        onSeek(e);
+      }} onPointerMove={(e) => {
+        if(e.buttons === 1) onSeek(e);
+      }}>
+        <div className="timeline-fill" style={{width: `${progress * 100}%`}}/>
+      </div>
+    </div>
+  );
 }
 
 function Sidebar({onExport,onPresets}) {
@@ -146,11 +223,64 @@ function Sidebar({onExport,onPresets}) {
 
 function UploadZone({compact=false}) {
   const input=useRef(null);
-  return <div className={`upload-zone ${compact?'compact':''}`} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();loadImageFile(e.dataTransfer.files[0]);}} onClick={()=>input.current.click()} role="button" tabIndex="0" onKeyDown={e=>{if(e.key==='Enter'||e.key===' ')input.current.click();}}><input ref={input} type="file" accept="image/png,image/jpeg,image/gif" hidden onChange={e=>loadImageFile(e.target.files[0])}/><ImageIcon size={compact?16:28}/><div><strong>{compact?'REPLACE IMAGE':'DROP AN IMAGE TO BEGIN'}</strong><span>{compact?'JPG / PNG / GIF':'OR CLICK TO BROWSE · LOCAL PROCESSING ONLY'}</span></div></div>;
+  return <div className={`upload-zone ${compact?'compact':''}`} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();loadImageFile(e.dataTransfer.files[0]);}} onClick={()=>input.current.click()} role="button" tabIndex="0" onKeyDown={e=>{if(e.key==='Enter'||e.key===' ')input.current.click();}}><input ref={input} type="file" accept="image/png,image/jpeg,video/mp4,video/webm" hidden onChange={e=>loadImageFile(e.target.files[0])}/><ImageIcon size={compact?16:28}/><div><strong>{compact?'REPLACE IMAGE':'DROP AN IMAGE TO BEGIN'}</strong><span>{compact?'JPG / PNG / MP4 / WEBM':'OR CLICK TO BROWSE · LOCAL PROCESSING ONLY'}</span></div></div>;
 }
 
 function Modal({title,onClose,children}) { useEffect(()=>{const fn=e=>e.key==='Escape'&&onClose();addEventListener('keydown',fn);return()=>removeEventListener('keydown',fn);},[onClose]); return <div className="modal-backdrop" onMouseDown={e=>e.target===e.currentTarget&&onClose()}><div className="modal" role="dialog" aria-modal="true"><header><div><small>OPENASCII / OUTPUT</small><h2>{title}</h2></div><button className="icon-button" onClick={onClose} aria-label="Close"><X/></button></header>{children}</div></div>; }
-function ExportModal({onClose}) { const {config,sourceUrl}=useEditor();const canvas=()=>document.getElementById('ascii-canvas');return <Modal title="EXPORT COMPOSITION" onClose={onClose}><p className="modal-lead">Your image and configuration stay on this device. Interactive exports include cursor physics and pause when off-screen.</p><div className="export-options"><button onClick={()=>exportHtml(config,sourceUrl,canvas())}><span>01</span><div><strong>INTERACTIVE HTML</strong><small>SELF-CONTAINED · NO DEPENDENCIES</small></div><Download/></button><button onClick={()=>exportReact(config,sourceUrl,canvas())}><span>02</span><div><strong>REACT COMPONENT</strong><small>JSX · PROPS READY</small></div><Download/></button><button onClick={()=>exportPng(canvas())}><span>03</span><div><strong>PNG FRAME</strong><small>CURRENT FRAME · FULL RESOLUTION</small></div><Download/></button></div></Modal>; }
+function ExportModal({onClose}) { 
+  const {config,sourceUrl,image}=useEditor();
+  const canvas=()=>document.getElementById('ascii-canvas');
+  const isVideo = image?.tagName === 'VIDEO';
+  const [recording, setRecording] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  const [fps, setFps] = useState(30);
+
+  if (isVideo) {
+    return <Modal title="EXPORT MP4" onClose={!recording ? onClose : undefined}>
+      <p className="modal-lead">Exporting a native MP4 file frame-by-frame. You can watch the render progress below.</p>
+      
+      {recording ? (
+        <div className="export-progress">
+          <canvas id="export-preview" style={{width: '100%', height: 'auto', background: '#000', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)'}} />
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: `${progress * 100}%` }} />
+          </div>
+          <div className="progress-text">RENDERING VIDEO... {Math.round(progress * 100)}%</div>
+        </div>
+      ) : (
+        <div className="export-options">
+          <button onClick={async () => {
+            setRecording(true);
+            setProgress(0);
+            const { exportVideoMp4 } = await import('./exporters.js');
+            const c = canvas();
+            await exportVideoMp4(config, sourceUrl || image.src, c.width, c.height, (prog, frameCanvas) => {
+              setProgress(prog);
+              const prev = document.getElementById('export-preview');
+              if (prev && frameCanvas) {
+                if (prev.width !== frameCanvas.width) prev.width = frameCanvas.width;
+                if (prev.height !== frameCanvas.height) prev.height = frameCanvas.height;
+                prev.getContext('2d').drawImage(frameCanvas, 0, 0);
+              }
+            });
+            setRecording(false);
+            onClose();
+          }} disabled={recording}>
+            <span>01</span>
+            <div>
+              <strong>START RENDER</strong>
+              <small>NATIVE MP4 FORMAT · FRAME-BY-FRAME</small>
+            </div>
+            <Download/>
+          </button>
+        </div>
+      )}
+    </Modal>;
+  }
+
+  return <Modal title="EXPORT COMPOSITION" onClose={onClose}><p className="modal-lead">Your image and configuration stay on this device. Interactive exports include cursor physics and pause when off-screen.</p><div className="export-options"><button onClick={()=>exportHtml(config,sourceUrl,canvas())}><span>01</span><div><strong>INTERACTIVE HTML</strong><small>SELF-CONTAINED · NO DEPENDENCIES</small></div><Download/></button><button onClick={()=>exportReact(config,sourceUrl,canvas())}><span>02</span><div><strong>REACT COMPONENT</strong><small>JSX · PROPS READY</small></div><Download/></button><button onClick={()=>exportPng(canvas())}><span>03</span><div><strong>PNG FRAME</strong><small>CURRENT FRAME · FULL RESOLUTION</small></div><Download/></button></div></Modal>; 
+}
 function PresetModal({onClose}) { const apply=useEditor(s=>s.applyPreset);return <Modal title="SELECT A PRESET" onClose={onClose}><div className="preset-list">{PRESETS.map((p,i)=><button key={p.name} onClick={()=>{apply(p);onClose();}}><span>{String(i+1).padStart(2,'0')}</span><div><strong>{p.name}</strong><small>{p.artStyle.replace('-',' ')} / {p.fxPreset.replace('-',' ')}</small></div><ArrowRight/></button>)}</div></Modal>; }
 
 function App() {
@@ -170,7 +300,8 @@ function App() {
     <header className="topbar"><nav><button className="theme-button" onClick={()=>setAbout(true)} aria-label="About OpenASCII" data-tip="About OpenASCII">◐</button></nav><div className="top-actions"><Button onClick={undo} disabled={!past.length} data-tip="Undo last change (Ctrl+Z)"><Undo2 size={13}/> UNDO</Button><Button onClick={handleSave} className={saved?'is-active':''} data-tip="Save settings to browser"><Save size={13}/> {saved?'SAVED':'SAVE'}</Button><Button onClick={toggleFullscreen} data-tip={fullscreen?'Exit fullscreen (F)':'Fullscreen (F)'}>{fullscreen?<Minimize2 size={13}/>:<Maximize2 size={13}/>} {fullscreen?'EXIT':'EXPAND'}</Button></div></header>
     <main className="workspace">
       <section className="canvas-stage" onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();loadImageFile(e.dataTransfer.files[0]);}}>
-        <div className="canvas-grid fixed-ratio" style={{'--target-ratio':ratioNumber}}><AsciiCanvas id="ascii-canvas" image={image} config={config} onStats={setStats}/>{loading&&<div className="canvas-loading" aria-label="Loading image"><div className="canvas-spinner"/><span>PROCESSING</span></div>}<div className="corner c1"/><div className="corner c2"/><div className="corner c3"/><div className="corner c4"/><div className="canvas-label"><span>LIVE OUTPUT</span><b>{String(config.quality).padStart(3,'0')}</b></div></div>
+        <div className="canvas-grid fixed-ratio" style={{'--target-ratio':ratioNumber}}><AsciiCanvas id="ascii-canvas" image={image} config={config} onStats={setStats} style={{ transform: 'translateZ(0)', willChange: 'transform' }} exposeEngine/>{loading&&<div className="canvas-loading" aria-label="Loading image"><div className="canvas-spinner"/><span>PROCESSING</span></div>}<div className="corner c1"/><div className="corner c2"/><div className="corner c3"/><div className="corner c4"/><div className="canvas-label"><span>LIVE OUTPUT</span><b>{String(config.quality).padStart(3,'0')}</b></div></div>
+        {image?.tagName==='VIDEO'&&<VideoTimeline video={image}/>}
         <div className="canvas-bottom"><div className="render-status"><i/><div><span>RENDER / ACTIVE</span><strong>{filename}</strong></div></div><div className="metrics"><span><b>{fps}</b> FPS</span><span><b>{cells.toLocaleString()}</b> CELLS</span><Button onClick={()=>setConfig({quality:Math.max(160,Math.round(config.quality/2))})}><Gauge size={13}/> REDUCE CHARACTERS</Button></div><div className="ratio-picker">{['ORIGINAL','16:9','4:3','1:1','3:4','9:16'].map(r=><button className={config.aspectRatio===r.toLowerCase()?'active':''} onClick={()=>setConfig({aspectRatio:r.toLowerCase()})} key={r}>{r}</button>)}</div></div>
       </section>
       <Sidebar onExport={()=>setExportOpen(true)} onPresets={()=>setPresetsOpen(true)}/>
