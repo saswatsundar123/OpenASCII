@@ -1,8 +1,12 @@
 {
-  "name": "@openascii/react",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "./src/index.js",
-  "peerDependencies": { "react": ">=18" },
-  "dependencies": { "@openascii/core": "workspace:*" }
+    "name":  "@openascii/react",
+    "version":  "1.5.0",
+    "type":  "module",
+    "main":  "./src/index.js",
+    "peerDependencies":  {
+                             "react":  "\u003e=18"
+                         },
+    "dependencies":  {
+                         "@openascii/core":  "workspace:*"
+                     }
 }

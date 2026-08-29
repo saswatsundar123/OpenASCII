@@ -1,23 +1,29 @@
 {
-  "name": "openascii",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "corepack pnpm --filter @openascii/app dev",
-    "build": "corepack pnpm --filter @openascii/app build",
-    "test": "node --test packages/core/test/*.test.js packages/app/test/*.test.js",
-    "benchmark:export": "node scripts/generate-benchmark-export.mjs",
-    "benchmark:capture": "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1",
-    "benchmark:particles": "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Particles",
-    "benchmark:colors": "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Colors",
-    "benchmark:lines": "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Lines",
-    "benchmark:styles": "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Styles",
-    "benchmark:aspects": "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Aspects",
-    "benchmark:generated": "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Generated",
-    "benchmark:temporal": "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Temporal"
-  },
-  "packageManager": "pnpm@10.13.1",
-  "pnpm": { "onlyBuiltDependencies": ["esbuild"] },
-  "engines": { "node": ">=18" }
+    "name":  "openascii",
+    "private":  true,
+    "version":  "1.5.0",
+    "type":  "module",
+    "scripts":  {
+                    "dev":  "corepack pnpm --filter @openascii/app dev",
+                    "build":  "corepack pnpm --filter @openascii/app build",
+                    "test":  "node --test packages/core/test/*.test.js packages/app/test/*.test.js",
+                    "benchmark:export":  "node scripts/generate-benchmark-export.mjs",
+                    "benchmark:capture":  "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1",
+                    "benchmark:particles":  "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Particles",
+                    "benchmark:colors":  "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Colors",
+                    "benchmark:lines":  "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Lines",
+                    "benchmark:styles":  "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Styles",
+                    "benchmark:aspects":  "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Aspects",
+                    "benchmark:generated":  "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Generated",
+                    "benchmark:temporal":  "powershell -ExecutionPolicy Bypass -File scripts/capture-benchmarks.ps1 -Temporal"
+                },
+    "packageManager":  "pnpm@10.13.1",
+    "pnpm":  {
+                 "onlyBuiltDependencies":  [
+                                               "esbuild"
+                                           ]
+             },
+    "engines":  {
+                    "node":  "\u003e=18"
+                }
 }

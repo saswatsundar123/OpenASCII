@@ -74,9 +74,9 @@ Grayscale · Full Color (sampled) · Matrix Green · Amber Monitor · Cyanotype 
 
 ---
 
-## Fork Features & Video Rendering
+## Video Rendering Integration
 
-This fork adds full video support, allowing users to import video files, preview them with an interactive timeline, and export the processed video as a native MP4 file.
+This release incorporates the highly requested video rendering feature, contributed by **[@Ishan3207](https://github.com/Ishan3207)**.
 
 ### What Changed
 - **Interactive Video Timeline**: Enabled automatically upon importing a video file to scrub and preview frames.
@@ -171,6 +171,11 @@ The milestone is complete when pressing **RANDOM** consistently produces visuall
 
 ## Changelog
 
+### v1.5.0 — Video Rendering & Export
+- Merged MP4 video rendering integration (contributed by **[@Ishan3207](https://github.com/Ishan3207)**)
+- Added interactive timeline for video frame scrubbing
+- Replaced basic exports with frame-by-frame Wasm-based FFmpeg MP4 export
+
 ### v1.0.0 — Stable Release
 
 **Editor**
@@ -200,6 +205,13 @@ The milestone is complete when pressing **RANDOM** consistently produces visuall
 
 ### v0.1.0
 - Initial public release
+
+---
+
+## Contributors
+
+- [Saswat Sundar Rath](https://github.com/saswatsundar123) (Creator)
+- [Ishan3207](https://github.com/Ishan3207) (Video rendering integration)
 
 ---
 
