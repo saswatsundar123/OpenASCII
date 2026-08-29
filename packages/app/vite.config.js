@@ -8,5 +8,14 @@ export default defineConfig({
       '@openascii/core': fileURLToPath(new URL('../core/src/index.js', import.meta.url)),
       '@openascii/react': fileURLToPath(new URL('../react/src/index.js', import.meta.url))
     }
+  },
+  server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp'
+    }
+  },
+  optimizeDeps: {
+    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util']
   }
 });

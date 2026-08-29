@@ -66,10 +66,38 @@ Grayscale · Full Color (sampled) · Matrix Green · Amber Monitor · Cyanotype 
 - **Loading indicator** — spinner overlay while images decode
 - **Tooltips** — context hints on every interactive control
 
-### Export (3 formats)
+### Export (4 formats)
 - Self-contained interactive HTML file
 - React JSX component
 - PNG snapshot
+- Native MP4 video export (Frame-by-frame ASCII processing via FFmpeg WebAssembly)
+
+---
+
+## Fork Features & Video Rendering
+
+This fork adds full video support, allowing users to import video files, preview them with an interactive timeline, and export the processed video as a native MP4 file.
+
+### What Changed
+- **Interactive Video Timeline**: Enabled automatically upon importing a video file to scrub and preview frames.
+- **Frame-by-Frame Video Processing**: Reads the native frame rate of the original video, extracts frames at exact microsecond intervals to prevent frame drift, applies the selected OpenASCII effect, and compiles them.
+- **FFmpeg WebAssembly Integration**: Replaced browser WebCodecs with `@ffmpeg/ffmpeg` running in WebAssembly (`libx264`) for cross-browser, hardware-agnostic MP4 generation.
+- **Chrome Blob Duration Handling**: Includes automatic fallback and duration detection workarounds for local blob URLs.
+- **Live Render Progress & Preview**: Displays real-time frame previews alongside progress percentage during export.
+
+### Tech Stack Additions
+- **FFmpeg WebAssembly**: `@ffmpeg/ffmpeg` and `@ffmpeg/util` for in-browser video encoding.
+- **Canvas Image Extraction**: Converts processed WebGL/2D canvas frames to JPEG blobs for WebAssembly processing.
+- **Vite Cross-Origin Isolation**: Configured `Cross-Origin-Opener-Policy` (`same-origin`) and `Cross-Origin-Embedder-Policy` (`require-corp`) to enable `SharedArrayBuffer` for FFmpeg multithreading.
+
+### Video Rendering Performance Warning
+Video export operates frame-by-frame to guarantee structural quality and prevent dropped frames. 
+
+Because each frame is processed through the ASCII engine and written to the WebAssembly virtual filesystem before being compiled with FFmpeg:
+- Rendering time depends directly on video resolution, total frame count, and CPU capability.
+- Short clips (5 to 10 seconds) typically complete within 15 to 45 seconds.
+- Longer videos or high-framerate clips (60 FPS) may take several minutes to process completely.
+- Do not close or navigate away from the browser tab while the render progress is active.
 
 ---
 
